@@ -52,7 +52,7 @@ Last Updated: 08/10/2017
 #include <algorithm>
 using namespace std;
 
-#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
 
 class OneLoneCoder_PathFinding : public olcConsoleGameEngine
 {
@@ -233,9 +233,9 @@ protected:
 			if(nSelectedNodeX >=0 && nSelectedNodeX < nMapWidth)
 				if (nSelectedNodeY >= 0 && nSelectedNodeY < nMapHeight)
 				{
-					if (m_keys[VK_SHIFT].bHeld)
+					if (m_keys[VK_LSHIFT].bHeld)
 						nodeStart = &nodes[nSelectedNodeY * nMapWidth + nSelectedNodeX];
-					else if (m_keys[VK_CONTROL].bHeld)
+					else if (m_keys[VK_LCONTROL].bHeld)
 						nodeEnd = &nodes[nSelectedNodeY * nMapWidth + nSelectedNodeX];
 					else
 						nodes[nSelectedNodeY * nMapWidth + nSelectedNodeX].bObstacle = !nodes[nSelectedNodeY * nMapWidth + nSelectedNodeX].bObstacle;
