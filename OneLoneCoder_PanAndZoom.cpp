@@ -45,8 +45,9 @@ https://youtu.be/ZQ8qtAizis4
 Last Updated: 10/06/2018
 */
 
-#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
 #include <string>
+#include <sstream>
 
 class OneLoneCoder_PanAndZoom : public olcConsoleGameEngine
 {
@@ -218,7 +219,9 @@ protected:
 		WorldToScreen(fSelectedCellX + 0.5f, fSelectedCellY + 0.5f, cx, cy);
 		cr = 0.3f * fScaleX;
 		FillCircle(cx, cy, cr, PIXEL_SOLID, FG_RED);
-		DrawString(2, 2, L"Lines Drawn: " + to_wstring(nLinesDrawn));
+		std::wostringstream ostr;
+		ostr << L"Lines Drawn: " << nLinesDrawn;
+		DrawString(2, 2, ostr.str());
 
 
 		// Draw Chart

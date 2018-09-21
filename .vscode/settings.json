@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "chrono": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "sstream": "cpp"
     }
 }
