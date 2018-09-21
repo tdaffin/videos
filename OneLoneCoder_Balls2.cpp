@@ -53,7 +53,7 @@ Last Updated: 18/02/2017
 #include <string>
 using namespace std;
 
-#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
 
 struct sBall
 {

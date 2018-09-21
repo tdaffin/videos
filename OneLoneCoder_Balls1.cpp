@@ -47,9 +47,12 @@ Last Updated: 21/01/2017
 
 #include <iostream>
 #include <string>
+#include <sstream>
 using namespace std;
 
-#include "olcConsoleGameEngine.h"
+//#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
+//#include "olcConsoleGameEngineGL.h"
 
 
 struct sBall
@@ -284,6 +287,13 @@ public:
 		// Draw Cue
 		if (pSelectedBall != nullptr)
 			DrawLine(pSelectedBall->px, pSelectedBall->py, m_mousePosX, m_mousePosY, PIXEL_SOLID, FG_BLUE);
+
+		for (int m=0; m<5; ++m){
+			wostringstream ostr;
+			ostr << "Mouse " << m << " " << m_mouse[m].bHeld << endl;
+			DrawString(1, 1+m, ostr.str());
+		}
+		Draw(m_mousePosX, m_mousePosY, 9608, 12);
 
 		return true;
 	}
