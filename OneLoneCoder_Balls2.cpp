@@ -51,6 +51,7 @@ Last Updated: 18/02/2017
 
 #include <iostream>
 #include <string>
+#include <memory>
 using namespace std;
 
 #include "olcConsoleGameEngineSDL.h"
@@ -218,20 +219,20 @@ public:
 		
 
 		vector<pair<sBall*, sBall*>> vecCollidingPairs;
-		vector<sBall*> vecFakeBalls;
+		vector<shared_ptr<sBall>> vecFakeBalls;
 
 		// Threshold indicating stability of object
 		float fStable = 0.05f;
 		
 		// Multiple simulation updates with small time steps permit more accurate physics
 		// and realistic results at the expense of CPU time of course
-		int nSimulationUpdates = 4;
+		int nSimulationUpdates = 1;//4;
 
 		// Multiple collision trees require more steps to resolve. Normally we would
 		// continue simulation until the object has no simulation time left for this
 		// epoch, however this is risky as the system may never find stability, so we
 		// can clamp it here
-		int nMaxSimulationSteps = 15;
+		int nMaxSimulationSteps = 1;//15;
 
 		// Break up the frame elapsed time into smaller deltas for each simulation update
 		float fSimElapsedTime = fElapsedTime / (float)nSimulationUpdates;
@@ -247,6 +248,12 @@ public:
 			// to it during its journey through this epoch
 			for (int j = 0; j < nMaxSimulationSteps; j++)
 			{
+				// Remove collisions
+				vecCollidingPairs.clear();
+
+				// Remove fake balls
+				vecFakeBalls.clear();
+
 				// Update Ball Positions
 				for (auto &ball : vecBalls)
 				{
@@ -316,7 +323,7 @@ public:
 							// Collision has occurred - treat collision point as a ball that cannot move. To make this
 							// compatible with the dynamic resolution code below, we add a fake ball with an infinite mass
 							// so it behaves like a solid object when the momentum calculations are performed
-							sBall *fakeball = new sBall();
+							auto fakeball = shared_ptr<sBall>(new sBall());
 							fakeball->radius = edge.radius;
 							fakeball->mass = ball.mass * 0.8f;
 							fakeball->px = fClosestPointX;
@@ -328,7 +335,7 @@ public:
 							vecFakeBalls.push_back(fakeball);
 							
 							// Add collision to vector of collisions for dynamic resolution
-							vecCollidingPairs.push_back({ &ball, fakeball });
+							vecCollidingPairs.push_back({ &ball, fakeball.get() });
 
 							// Calculate displacement required
 							float fOverlap = 1.0f * (fDistance - ball.radius - fakeball->radius);
@@ -415,13 +422,6 @@ public:
 					b2->vx = tx * dpTan2 + nx * m2;
 					b2->vy = ty * dpTan2 + ny * m2;
 				}
-
-				// Remove collisions
-				vecCollidingPairs.clear();
-
-				// Remove fake balls
-				for (auto &b : vecFakeBalls) delete b;
-				vecFakeBalls.clear();
 			}
 		}
 
@@ -445,8 +445,19 @@ public:
 		}
 
 		// Draw Balls
-		for (auto ball : vecBalls)
-			FillCircle(ball.px, ball.py, ball.radius, PIXEL_SOLID, FG_RED);
+		for (auto ball : vecBalls){
+			DrawCircle(ball.px, ball.py, ball.radius, PIXEL_SOLID, FG_GREEN);
+
+			//FillCircle(ball.px, ball.py, ball.radius, PIXEL_SOLID, FG_RED);
+		}
+
+		// Draw collisions
+		// Now work out dynamic collisions
+		for (auto c : vecCollidingPairs)
+		{
+			sBall *b1 = c.first, *b2 = c.second;
+			DrawLine(b1->px, b1->py, b2->px, b2->py, PIXEL_SOLID, FG_RED);
+		}
 
 		// Draw Cue
 		if (pSelectedBall != nullptr)
