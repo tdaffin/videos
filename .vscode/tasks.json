@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "g++ \"${file}\" -DUNICODE -I/usr/include/SDL2 -lSDL2 -lpthread -std=c++11",
+            "command": "g++ \"${file}\" -g -DUNICODE -I/usr/include/SDL2 -lSDL2 -lpthread -std=c++11",
             "problemMatcher": [
                 "$gcc"
             ],
