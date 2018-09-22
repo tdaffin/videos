@@ -443,6 +443,7 @@ public:
 		memset(m_keyNewState, 0, 512 * sizeof(bool));
 		memset(m_keyOldState, 0, 512 * sizeof(bool));
 		memset(m_keys._state, 0, 512 * sizeof(sKeyState));
+		memset(m_mouse, 0, 5 * sizeof(sKeyState));
 		m_mousePosX = 0;
 		m_mousePosY = 0;
 
