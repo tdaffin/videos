@@ -119,7 +119,7 @@ public:
 
 	virtual int BounceDeathAction()
 	{
-		return 0; // Nothing, just fade
+		return -2; // Build a circle
 	}
 
 private:
@@ -372,10 +372,16 @@ private:
 						{
 							// Action upon object death
 							// = 0 Nothing
-							// > 0 Explosion 
+							// > 0 Explosion
+							// < 0 Build!
 							int nResponse = p->BounceDeathAction();
 							if (nResponse > 0)
 								Boom(p->px, p->py, nResponse);
+							else if (nResponse<0){
+								// Build Terrain
+								//CircleBresenham(p->px, p->py, -nResponse, 1);
+								CircleBresenham(fPotentialX, fPotentialY, -nResponse, 1);
+							}
 						}
 					}
 
@@ -419,38 +425,38 @@ private:
 		return true;
 	}
 
+	void CircleBresenham(int xc, int yc, int r, unsigned char val)
+	{
+		// Taken from wikipedia
+		int x = 0;
+		int y = r;
+		int p = 3 - 2 * r;
+		if (!r) return;
+
+		auto drawline = [&](int sx, int ex, int ny)
+		{
+			for (int i = sx; i < ex; i++)
+				if (ny >= 0 && ny < nMapHeight && i >= 0 && i < nMapWidth)
+					map[ny*nMapWidth + i] = val;
+		};
+
+		while (y >= x) 
+		{
+			// Modified to draw scan-lines instead of edges
+			drawline(xc - x, xc + x, yc - y);
+			drawline(xc - y, xc + y, yc - x);
+			drawline(xc - x, xc + x, yc + y);
+			drawline(xc - y, xc + y, yc + x);
+			if (p < 0) p += 4 * x++ + 6;
+			else p += 4 * (x++ - y--) + 10;
+		}
+	}
+
 	// Explosion Function
 	void Boom(float fWorldX, float fWorldY, float fRadius)
 	{
-		auto CircleBresenham = [&](int xc, int yc, int r)
-		{
-			// Taken from wikipedia
-			int x = 0;
-			int y = r;
-			int p = 3 - 2 * r;
-			if (!r) return;
-
-			auto drawline = [&](int sx, int ex, int ny)
-			{
-				for (int i = sx; i < ex; i++)
-					if (ny >= 0 && ny < nMapHeight && i >= 0 && i < nMapWidth)
-						map[ny*nMapWidth + i] = 0;
-			};
-
-			while (y >= x) 
-			{
-				// Modified to draw scan-lines instead of edges
-				drawline(xc - x, xc + x, yc - y);
-				drawline(xc - y, xc + y, yc - x);
-				drawline(xc - x, xc + x, yc + y);
-				drawline(xc - y, xc + y, yc + x);
-				if (p < 0) p += 4 * x++ + 6;
-				else p += 4 * (x++ - y--) + 10;
-			}
-		};
-
 		// Erase Terrain to form crater
-		CircleBresenham(fWorldX, fWorldY, fRadius);
+		CircleBresenham(fWorldX, fWorldY, fRadius, 0);
 
 		// Shockwave other entities in range
 		for (auto &p : listObjects)
