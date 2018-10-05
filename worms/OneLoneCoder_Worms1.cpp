@@ -35,7 +35,7 @@ Last Updated: 26/11/2017
 #include <algorithm>
 using namespace std;
 
-#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
 
 class cPhysicsObject
 {
