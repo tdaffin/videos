@@ -37,6 +37,11 @@ using namespace std;
 
 #include "olcConsoleGameEngineSDL.h"
 
+class cMap {
+public:
+	virtual unsigned char GetMap(int x, int y) = 0;
+};
+
 class cPhysicsObject
 {
 public:
@@ -53,6 +58,7 @@ public:
 
 	int nBounceBeforeDeath = -1;	// How many time object can bounce before death
 									// -1 = infinite
+	bool bDieWhenStable = false;	// Indicate if object should die when it becomes stable
 	bool bDead = false;		// Flag to indicate object should be removed
 
 	cPhysicsObject(float x = 0.0f, float y = 0.0f)
@@ -64,6 +70,33 @@ public:
 	// Make class abstract
 	virtual void Draw(olcConsoleGameEngine *engine, float fOffsetX, float fOffsetY) = 0;
 	virtual int BounceDeathAction() = 0;
+	virtual int StableDeathAction() { return 0; }
+
+	virtual bool CheckCollision(cMap* map, float fPotentialX, float fPotentialY, float& fResponseX, float& fResponseY)
+	{
+		fResponseX = 0;
+		fResponseY = 0;
+		bool bCollision = false;
+
+		// Iterate through semicircle of objects radius rotated to direction of travel
+		float fAngle = atan2f(vy, vx);
+		for (float r = fAngle - 3.14159f / 2.0f; r < fAngle + 3.14159f / 2.0f; r += 3.14159f / 8.0f)
+		{
+			// Calculate test point on circumference of circle
+			float fTestPosX = radius * cosf(r) + fPotentialX;
+			float fTestPosY = radius * sinf(r) + fPotentialY;
+
+			// Test if any points on semicircle intersect with terrain
+			if (map->GetMap(fTestPosX, fTestPosY) != 0)
+			{
+				// Accumulate collision points to give an escape response vector
+				// Effectively, normal to the areas of contact
+				fResponseX += fPotentialX - fTestPosX;
+				fResponseY += fPotentialY - fTestPosY;
+				bCollision = true;
+			}
+		}
+	}
 };
 
 
@@ -137,6 +170,99 @@ vector<pair<float, float>> DefineDebris()
 	return vecModel;
 }
 vector<pair<float, float>> cDebris::vecModel = DefineDebris();
+
+const int nbrIdx[3][3] = {
+	{3, 2, 1},
+	{4,-1, 0},
+	{5, 6, 7}};
+const int nbrs[][2] = {{1,0}, {1,-1}, {0,-1}, {-1,-1}, {-1,0}, {-1,1}, {0,1}, {1,1}};
+
+class cPixel : public cPhysicsObject
+{
+public:
+	cPixel(float x, float y): cPhysicsObject(x, y)
+	{
+		radius = 0.5f;
+		fFriction = 0.1f;
+		nBounceBeforeDeath = -1;
+		bDieWhenStable = true;
+	}
+
+	virtual void Draw(olcConsoleGameEngine *engine, float fOffsetX, float fOffsetY)
+	{
+		engine->Draw(px - fOffsetX, py - fOffsetY);
+	}
+
+	virtual int BounceDeathAction()
+	{
+		return 0; // Nothing, just fade
+	}
+
+	virtual int StableDeathAction()
+	{
+		return 1;
+	}
+
+	virtual bool CheckCollision(cMap* map, float fPotentialX, float fPotentialY, float& fResponseX, float& fResponseY)
+	{
+		fResponseX = 0;
+		fResponseY = 0;
+		bool bCollision = false;
+
+		int dx = vx > 0 ? 1 : (vx < 0 ? -1 : 0);
+		int dy = vy > 0 ? 1 : (vy < 0 ? -1 : 0);
+
+		int x = (int)fPotentialX;
+		int y = (int)fPotentialY;
+		if (map->GetMap(x, y) != 0){
+			// Estimate an escape response vector effectively, normal to the areas of contact
+			int cx = (int)px; 
+			int cy = (int)py;
+			if (cx == x){
+				fResponseX = 0;
+				fResponseY = -dy;//px - fPotentialX;
+			} else if (cy == y){
+				fResponseX = -dx;
+				fResponseY = 0;
+			} else if (cx == x && cy == y){
+				fResponseX = 0;
+				fResponseY = -1; // up!
+			} else {
+				fResponseX = -dx;
+				fResponseY = -dy;
+			}
+
+			//fResponseX += fPotentialX - x;
+			//fResponseY += fPotentialY - y;
+			bCollision = true;
+		}
+
+		// Check up to 3 of eight neighbors in direction of travel
+		/*
+		int i0 = nbrIdx[dx+1][dy+1];
+		int idxs[3] = {i0, (i0+1)%8, (i0+7)%8};
+		for (int i=0; i<3; ++i){
+			float fTestPosX = radius * cosf(r) + fPotentialX;
+			float fTestPosY = radius * sinf(r) + fPotentialY;
+		}
+		for (float r = fAngle - 3.14159f / 2.0f; r < fAngle + 3.14159f / 2.0f; r += 3.14159f / 8.0f)
+		{
+			// Calculate test point on circumference of circle
+			float fTestPosX = radius * cosf(r) + fPotentialX;
+			float fTestPosY = radius * sinf(r) + fPotentialY;
+
+			// Test if any points on semicircle intersect with terrain
+			if (map->GetMap(fTestPosX, fTestPosY) != 0)
+			{
+				// Accumulate collision points to give an escape response vector
+				// Effectively, normal to the areas of contact
+				fResponseX += fPotentialX - fTestPosX;
+				fResponseY += fPotentialY - fTestPosY;
+				bCollision = true;
+			}
+		}*/
+	}
+};
 
 
 class cMissile : public cPhysicsObject // A projectile weapon
@@ -228,12 +354,21 @@ olcSprite* cWorm::sprWorm = nullptr;
 
 
 // Main Game Engine Class
-class OneLoneCoder_Worms : public olcConsoleGameEngine
+class OneLoneCoder_Worms : public olcConsoleGameEngine, cMap
 {
 public:
 	OneLoneCoder_Worms()
 	{
 		m_sAppName = L"Worms";
+	}
+
+	unsigned char GetMap(int x, int y){
+		// Constrain to test within map boundary
+		if (x >= nMapWidth) return -1;//x = nMapWidth - 1;
+		if (y >= nMapHeight) return -1;//y = nMapHeight - 1;
+		if (x < 0) return -1;//x = 0;
+		if (y < 0) y = 0; // Allows things to go off the top
+		return map[y * nMapWidth + x];
 	}
 
 private:
@@ -275,8 +410,12 @@ private:
 			listObjects.push_back(unique_ptr<cMissile>(new cMissile(m_mousePosX + fCameraPosX, m_mousePosY + fCameraPosY)));
 
 		// Middle click to spawn worm/unit
-		if (m_mouse[2].bReleased)
+		if (m_mouse[2].bReleased){
+			/*auto dummy = new cDummy(m_mousePosX + fCameraPosX, m_mousePosY + fCameraPosY);
+			dummy->fFriction = 0.4f;//1.0f;
+			listObjects.push_back(unique_ptr<cDummy>(dummy));*/
 			listObjects.push_back(unique_ptr<cWorm>(new cWorm(m_mousePosX + fCameraPosX, m_mousePosY + fCameraPosY)));
+		}
 
 		// Mouse Edge Map Scroll
 		float fMapScrollSpeed = 400.0f;
@@ -315,34 +454,9 @@ private:
 				p->bStable = false;
 
 				// Collision Check With Map
-				float fAngle = atan2f(p->vy, p->vx);
 				float fResponseX = 0;
 				float fResponseY = 0;
-				bool bCollision = false;
-
-				// Iterate through semicircle of objects radius rotated to direction of travel
-				for (float r = fAngle - 3.14159f / 2.0f; r < fAngle + 3.14159f / 2.0f; r += 3.14159f / 8.0f)
-				{
-					// Calculate test point on circumference of circle
-					float fTestPosX = (p->radius) * cosf(r) + fPotentialX;
-					float fTestPosY = (p->radius) * sinf(r) + fPotentialY;
-
-					// Constrain to test within map boundary
-					if (fTestPosX >= nMapWidth) fTestPosX = nMapWidth - 1;
-					if (fTestPosY >= nMapHeight) fTestPosY = nMapHeight - 1;
-					if (fTestPosX < 0) fTestPosX = 0;
-					if (fTestPosY < 0) fTestPosY = 0;
-
-					// Test if any points on semicircle intersect with terrain
-					if (map[(int)fTestPosY * nMapWidth + (int)fTestPosX] != 0)
-					{
-						// Accumulate collision points to give an escape response vector
-						// Effectively, normal to the areas of contact
-						fResponseX += fPotentialX - fTestPosX;
-						fResponseY += fPotentialY - fTestPosY;
-						bCollision = true;
-					}
-				}
+				bool bCollision = p->CheckCollision(this, fPotentialX, fPotentialY, fResponseX, fResponseY);
 
 				// Calculate magnitudes of response and velocity vectors
 				float fMagVelocity = sqrtf(p->vx*p->vx + p->vy*p->vy);
@@ -352,7 +466,7 @@ private:
 				if (bCollision)
 				{
 					// Force object to be stable, this stops the object penetrating the terrain
-					p->bStable = true;
+					//p->bStable = true;
 					
 					// Calculate reflection vector of objects velocity vector, using response vector as normal
 					float dot = p->vx * (fResponseX / fMagResponse) + p->vy * (fResponseY / fMagResponse);
@@ -380,7 +494,37 @@ private:
 							else if (nResponse<0){
 								// Build Terrain
 								//CircleBresenham(p->px, p->py, -nResponse, 1);
-								CircleBresenham(fPotentialX, fPotentialY, -nResponse, 1);
+								//CircleBresenham(fPotentialX, fPotentialY, -nResponse, 1);
+								// Create a pixel
+								//listObjects.push_back(unique_ptr<cPixel>(new cPixel(p->px, p->py)));
+								// Create four pixels
+								listObjects.push_back(unique_ptr<cPixel>(new cPixel(p->px, p->py)));
+								listObjects.push_back(unique_ptr<cPixel>(new cPixel(p->px + 1.0f, p->py)));
+								listObjects.push_back(unique_ptr<cPixel>(new cPixel(p->px, p->py + 1.0f)));
+								listObjects.push_back(unique_ptr<cPixel>(new cPixel(p->px + 1.0f, p->py + 1.0f)));
+							}
+						}
+					}
+					else {
+						// Turn off movement when tiny and in collision with mostly horizontal
+						if (fMagVelocity < 0.1f) {
+							if (-fResponseY/fMagResponse > 0.9f)
+								p->bStable = true;
+						}
+
+						// Some objects will "die" when they become stable
+						if (p->bStable && p->bDieWhenStable){
+							p->bDead = true;
+
+							// If object died, work out what to do next
+							if (p->bDead)
+							{
+								// Action upon object death
+								// = 0 Nothing
+								// > 0 Build
+								int nResponse = p->StableDeathAction();
+								if (nResponse > 0)
+									DrawMap(p->px, p->py, 1);
 							}
 						}
 					}
@@ -393,8 +537,7 @@ private:
 					p->py = fPotentialY;
 				}
 
-				// Turn off movement when tiny
-				if (fMagVelocity < 0.1f) p->bStable = true;
+				
 			}
 
 			// Remove dead objects from the list, so they are not processed further. As the object
@@ -425,6 +568,11 @@ private:
 		return true;
 	}
 
+	void DrawMap(int x, int y, unsigned char val){
+		if (y >= 0 && y < nMapHeight && x >= 0 && x < nMapWidth)
+			map[y * nMapWidth + x] = val;
+	}
+
 	void CircleBresenham(int xc, int yc, int r, unsigned char val)
 	{
 		// Taken from wikipedia
@@ -436,8 +584,7 @@ private:
 		auto drawline = [&](int sx, int ex, int ny)
 		{
 			for (int i = sx; i < ex; i++)
-				if (ny >= 0 && ny < nMapHeight && i >= 0 && i < nMapWidth)
-					map[ny*nMapWidth + i] = val;
+				DrawMap(i, ny, val);
 		};
 
 		while (y >= x) 
