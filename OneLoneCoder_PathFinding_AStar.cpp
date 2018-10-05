@@ -115,7 +115,7 @@ protected:
 					nodes[y*nMapWidth + x].vecNeighbours.push_back(&nodes[(y + 0) * nMapWidth + (x + 1)]);
 
 				// We can also connect diagonally
-				/*if (y>0 && x>0)
+				if (y>0 && x>0)
 					nodes[y*nMapWidth + x].vecNeighbours.push_back(&nodes[(y - 1) * nMapWidth + (x - 1)]);
 				if (y<nMapHeight-1 && x>0)
 					nodes[y*nMapWidth + x].vecNeighbours.push_back(&nodes[(y + 1) * nMapWidth + (x - 1)]);
@@ -123,7 +123,7 @@ protected:
 					nodes[y*nMapWidth + x].vecNeighbours.push_back(&nodes[(y - 1) * nMapWidth + (x + 1)]);
 				if (y<nMapHeight - 1 && x<nMapWidth-1)
 					nodes[y*nMapWidth + x].vecNeighbours.push_back(&nodes[(y + 1) * nMapWidth + (x + 1)]);
-				*/
+				
 			}
 
 		// Manually positio the start and end markers so they are not nullptr
