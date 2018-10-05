@@ -205,7 +205,7 @@ public:
 
 		// load sprite data from sprite file
 		if (sprWorm == nullptr)
-			sprWorm = new olcSprite(L"worms.spr");
+			sprWorm = new olcSprite(L"./worms/worms.spr");
 	}
 
 	virtual void Draw(olcConsoleGameEngine *engine, float fOffsetX, float fOffsetY)
