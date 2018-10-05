@@ -57,7 +57,7 @@ Last Updated: 04/02/2018
 #include <string>
 using namespace std;
 
-#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
 
 class OneLoneCoder_Platformer : public olcConsoleGameEngine
 {
