@@ -40,7 +40,7 @@ Last Updated: 19/12/2017
 #include <algorithm>
 using namespace std;
 
-#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
 
 
 class cPhysicsObject
@@ -192,7 +192,7 @@ public:
 
 		// load sprite data from sprite file
 		if (sprWorm == nullptr)
-			sprWorm = new olcSprite(L"worms1.spr");
+			sprWorm = new olcSprite(L"./worms/worms1.spr");
 	}
 
 	virtual void Draw(olcConsoleGameEngine *engine, float fOffsetX, float fOffsetY, bool bPixel = false)
