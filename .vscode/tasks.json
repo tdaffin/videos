@@ -20,6 +20,12 @@
             "type": "shell",
             "command": "${workspaceFolder}/a.out",
             "problemMatcher": []
+        },
+        {
+            "label": "Launch GitK",
+            "type": "shell",
+            "command": "gitk",
+            "problemMatcher": []
         }
     ]
 }
