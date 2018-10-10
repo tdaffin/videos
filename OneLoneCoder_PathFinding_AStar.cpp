@@ -94,11 +94,12 @@ protected:
 		for (int x = 0; x < nMapWidth; x++)
 			for (int y = 0; y < nMapHeight; y++)
 			{
-				nodes[y * nMapWidth + x].x = x; // ...because we give each node its own coordinates
-				nodes[y * nMapWidth + x].y = y;
-				nodes[y * nMapWidth + x].bObstacle = false;
-				nodes[y * nMapWidth + x].parent = nullptr;
-				nodes[y * nMapWidth + x].bVisited = false;
+				auto& node = nodes[y * nMapWidth + x];
+				node.x = x; // ...because we give each node its own coordinates
+				node.y = y;
+				node.bObstacle = false;
+				node.parent = nullptr;
+				node.bVisited = false;
 			}
 
 		// Create connections - in this case nodes are on a regular grid
@@ -261,22 +262,38 @@ protected:
 		for (int x = 0; x < nMapWidth; x++)
 			for (int y = 0; y < nMapHeight; y++)
 			{
-	
-				Fill(x*nNodeSize + nNodeBorder, y*nNodeSize + nNodeBorder, 
-					(x + 1)*nNodeSize - nNodeBorder, (y + 1)*nNodeSize - nNodeBorder, 
-					PIXEL_HALF, nodes[y * nMapWidth + x].bObstacle ? FG_WHITE : FG_BLUE);
+				auto& node = nodes[y * nMapWidth + x];
+				int x0 = x*nNodeSize + nNodeBorder;
+				int y0 = y*nNodeSize + nNodeBorder;
+				int x1 = (x + 1)*nNodeSize - nNodeBorder;
+				int y1 = (y + 1)*nNodeSize - nNodeBorder;
 
-				if (nodes[y * nMapWidth + x].bVisited)
-					Fill(x*nNodeSize + nNodeBorder, y*nNodeSize + nNodeBorder, (x + 1)*nNodeSize - nNodeBorder, (y + 1)*nNodeSize - nNodeBorder, PIXEL_SOLID, FG_BLUE);
+				Fill(x0, y0, x1, y1, PIXEL_HALF, node.bObstacle ? FG_WHITE : FG_BLUE);
 
-				if(&nodes[y * nMapWidth + x] == nodeStart)
-					Fill(x*nNodeSize + nNodeBorder, y*nNodeSize + nNodeBorder, (x + 1)*nNodeSize - nNodeBorder, (y + 1)*nNodeSize - nNodeBorder, PIXEL_SOLID, FG_GREEN);
+				if (node.bVisited)
+					Fill(x0, y0, x1, y1, PIXEL_SOLID, FG_BLUE);
 
-				if(&nodes[y * nMapWidth + x] == nodeEnd)
-					Fill(x*nNodeSize + nNodeBorder, y*nNodeSize + nNodeBorder, (x + 1)*nNodeSize - nNodeBorder, (y + 1)*nNodeSize - nNodeBorder, PIXEL_SOLID, FG_RED);						
+				if(&node == nodeStart)
+					Fill(x0, y0, x1, y1, PIXEL_SOLID, FG_GREEN);
+
+				if(&node == nodeEnd)
+					Fill(x0, y0, x1, y1, PIXEL_SOLID, FG_RED);
+				
 				
 			}
 
+		// Draw all the paths that were considered
+		for (int x = 0; x < nMapWidth; x++)
+			for (int y = 0; y < nMapHeight; y++)
+			{
+				auto& node = nodes[y * nMapWidth + x];
+				if(node.parent != nullptr){
+					auto& p = node.parent;
+					DrawLine(x*nNodeSize + nNodeSize / 2, y*nNodeSize + nNodeSize / 2,
+						p->x*nNodeSize + nNodeSize / 2, p->y*nNodeSize + nNodeSize / 2,
+						PIXEL_SOLID, FG_DARK_MAGENTA);
+				}
+			}
 
 		// Draw Path by starting ath the end, and following the parent node trail
 		// back to the start - the start node will not have a parent path to follow
