@@ -207,7 +207,7 @@ protected:
 
 		// We can easily determine where the mouse is in world space. In fact we already
 		// have this frame so just reuse the values
-		if (GetMouse(1).bReleased)
+		if (GetMouse(0).bReleased)
 		{
 			fSelectedCellX = (int)fMouseWorldX_AfterZoom;
 			fSelectedCellY = (int)fMouseWorldY_AfterZoom;
@@ -226,7 +226,7 @@ protected:
 
 		// Draw Chart
 		float fWorldPerScreenWidthPixel = (fWorldRight - fWorldLeft) / ScreenWidth();
-		float fWorldPerScreenHeightPixel = (fWorldBottom - fWorldTop) / ScreenHeight();
+		//float fWorldPerScreenHeightPixel = (fWorldBottom - fWorldTop) / ScreenHeight();
 		int px, py, opx = 0, opy = 0;
 		WorldToScreen(fWorldLeft-fWorldPerScreenWidthPixel, -function((fWorldLeft - fWorldPerScreenWidthPixel) - 5.0f) + 5.0f, opx, opy);
 		for (float x = fWorldLeft; x < fWorldRight; x+=fWorldPerScreenWidthPixel)
