@@ -1410,7 +1410,7 @@ protected: // Audio Engine =====================================================
 		// Goofy hack to get maximum integer for a type at run-time
 		short nMaxSample = (short)pow(2, (sizeof(short) * 8) - 1) - 1;
 		float fMaxSample = (float)nMaxSample;
-		short nPreviousSample = 0;
+		//short nPreviousSample = 0;
 
 		// Prepare block for processing
 		memset(byteStream, 0, len);
