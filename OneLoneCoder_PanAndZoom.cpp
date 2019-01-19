@@ -207,7 +207,7 @@ protected:
 
 		// We can easily determine where the mouse is in world space. In fact we already
 		// have this frame so just reuse the values
-		if (GetMouse(0).bReleased)
+		if (GetMouse(1).bReleased)
 		{
 			fSelectedCellX = (int)fMouseWorldX_AfterZoom;
 			fSelectedCellY = (int)fMouseWorldY_AfterZoom;
