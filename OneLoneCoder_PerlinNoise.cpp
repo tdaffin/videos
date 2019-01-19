@@ -53,7 +53,7 @@ Last Updated: 29/10/2017
 #include <algorithm>
 using namespace std;
 
-#include "olcConsoleGameEngine.h"
+#include "olcConsoleGameEngineSDL.h"
 
 class OneLoneCoder_PerlinNoiseDemo : public olcConsoleGameEngine
 {
