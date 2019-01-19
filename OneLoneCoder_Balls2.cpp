@@ -290,7 +290,7 @@ public:
 				// Work out static collisions with walls and displace balls so no overlaps
 				for (auto &ball : vecBalls)
 				{
-					float fDeltaTime = ball.fSimTimeRemaining;
+					//float fDeltaTime = ball.fSimTimeRemaining;
 
 					// Against Edges
 					for (auto &edge : vecLines)
@@ -379,7 +379,7 @@ public:
 					// point and calculate how much time that journey would have taken using the speed of the object. Therefore
 					// we can now work out how much time remains in that timestep.
 					float fIntendedSpeed	= sqrtf(ball.vx * ball.vx + ball.vy * ball.vy);
-					float fIntendedDistance = fIntendedSpeed * ball.fSimTimeRemaining;
+					//float fIntendedDistance = fIntendedSpeed * ball.fSimTimeRemaining;
 					float fActualDistance	= sqrtf((ball.px - ball.ox)*(ball.px - ball.ox) + (ball.py - ball.oy)*(ball.py - ball.oy));
 					float fActualTime = fActualDistance / fIntendedSpeed;
 
